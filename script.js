@@ -65,7 +65,55 @@ function codeGenerator(ast) {
     return null;
 }
 
-//Dinesh Write here
+//functions for DFA building
+function buildStartWithDFA(prefix, alphabet) {
+    let dfa = {};
+    for (let i = 0; i <= prefix.length; i++) {
+        let state = "q" + i;
+        dfa[state] = {};
+        for (let c of alphabet) {
+            if (i < prefix.length && c === prefix[i]) {
+                dfa[state][c] = "q" + (i + 1);
+            } else if (i < prefix.length) {
+                dfa[state][c] = "qReject";
+            } else {
+                dfa[state][c] = "q" + prefix.length;
+            }
+        }
+        dfa[state]["else"] = "qReject";
+    }
+    dfa["qReject"] = {};
+    alphabet.forEach(c => dfa["qReject"][c] = "qReject");
+    dfa["qReject"]["else"] = "qReject";
+    dfa["q" + prefix.length].accept = true;
+    return dfa;
+}
+
+function buildEndsWithDFA(suffix, alphabet) {
+    let dfa = {};
+    let len = suffix.length;
+    for (let i = 0; i <= len; i++) {
+        dfa["q" + i] = {};
+    }
+    dfa["qReject"] = {};
+    alphabet.forEach(c => dfa["qReject"][c] = "qReject");
+    dfa["qReject"]["else"] = "qReject";
+
+    for (let i = 0; i <= len; i++) {
+        let state = "q" + i;
+        for (let c of alphabet) {
+            let next = i;
+            if (c === suffix[i]) next = i + 1;
+            else if (i > 0 && c === suffix[0]) next = 1;
+            else next = 0;
+            if (next > len) next = len;
+            dfa[state][c] = "q" + next;
+        }
+        dfa[state]["else"] = "qReject";
+    }
+    dfa["q" + len].accept = true;
+    return dfa;
+}
 
 function buildContainDFA(pattern, alphabet) {
     let len = pattern.length;
